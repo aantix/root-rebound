@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Root Rebound">
+<title>Root Rebound 🏀</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overflow-x:hidden}
+body{margin:0;font-family:"Chalkboard SE","Chalkboard","Comic Sans MS","Marker Felt",sans-serif;background:linear-gradient(#1b2a4a,#0e1730);color:#fff;min-height:100vh;text-align:center;user-select:none;-webkit-user-select:none}
+#app{max-width:640px;margin:0 auto;padding:14px 12px 40px}
+h1{font-size:34px;margin:6px 0 2px}
+.sub{color:#ffd27a;font-size:17px;margin-bottom:14px}
+.btn{display:block;width:100%;border:none;border-radius:18px;padding:16px;margin:10px 0;font:inherit;font-size:22px;color:#1b2a4a;background:#ffb23f;box-shadow:0 5px 0 #c97a10;cursor:pointer}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #c97a10}
+.btn.blue{background:#7fd3ff;box-shadow:0 5px 0 #2f8fc2}
+.btn.green{background:#7be38a;box-shadow:0 5px 0 #2f9a40}
+.btn.purple{background:#d3a6ff;box-shadow:0 5px 0 #8a4fc4}
+.btn small{display:block;font-size:15px;opacity:.8}
+.bar{display:flex;justify-content:space-between;align-items:center;font-size:18px;margin-bottom:8px}
+.bar button{background:none;border:2px solid #fff6;color:#fff;border-radius:12px;font:inherit;padding:4px 10px}
+.court{background:#c8743a;border:4px solid #fff;border-radius:22px;padding:14px 10px;margin:8px 0;position:relative;min-height:120px}
+.prompt{font-size:22px;margin:4px 0 10px}
+.big{font-size:44px;letter-spacing:3px;margin:8px 0;min-height:56px;word-break:break-all}
+.tip{background:#fff;color:#1b2a4a;border-radius:14px;padding:10px;font-size:19px;margin:10px 0}
+.slots{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;margin:10px 0;min-height:54px}
+.slot{width:38px;height:50px;border-bottom:4px solid #fff;font-size:34px;line-height:50px}
+.slot.ok{color:#7be38a}.slot.bad{color:#ff7b7b}
+.tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0}
+.tile{min-width:52px;height:58px;padding:0 10px;border:none;border-radius:12px;background:#fff;color:#1b2a4a;font:inherit;font-size:30px;box-shadow:0 4px 0 #9aa6c0;cursor:pointer}
+.tile.chunk{font-size:26px;background:#ffe9b8}
+.tile.used{visibility:hidden}
+.tile:active{transform:translateY(3px);box-shadow:0 1px 0 #9aa6c0}
+.choices .btn{font-size:30px;letter-spacing:2px}
+.row{display:flex;gap:8px}.row .btn{font-size:18px;padding:12px}
+.kb{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.kb div{display:flex;justify-content:center;gap:4px}
+.kb button{flex:1;max-width:52px;height:52px;border:none;border-radius:9px;background:#fff;color:#1b2a4a;font:inherit;font-size:24px;box-shadow:0 3px 0 #9aa6c0}
+.kb button.wide{max-width:96px;font-size:17px;background:#ffb23f}
+#ball{font-size:56px;position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);display:none;pointer-events:none}
+.shoot{display:block!important;animation:shoot .9s ease-out forwards}
+@keyframes shoot{0%{transform:translate(-50%,60px) scale(1)}60%{transform:translate(-50%,-90px) scale(.8)}100%{transform:translate(-50%,-40px) scale(.6);opacity:0}}
+.flash{font-size:46px;color:#ffd27a;margin:10px 0}
+.hl{color:#ffd27a;text-decoration:underline}
+.score{font-size:24px;color:#ffd27a}
+.msg{font-size:24px;min-height:32px;margin:6px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0;text-align:left;font-size:19px}
+.grid div{overflow-wrap:anywhere;background:#ffffff14;border-radius:10px;padding:6px 10px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+var WORDS = [
+ {w:"archrival",    chunks:["arch","ri","val"], trick:"arch", tip:"arch means chief or top. arch + rival = your TOP rival!", sent:"Our archrival team beat us by one point last year.", fakes:["arkrival","archrivel"]},
+ {w:"paragraph",    chunks:["par","a","graph"], trick:"graph", tip:"graph means write. P-H makes the F sound: g-r-a-p-h.", sent:"Write one paragraph about your favorite player.", fakes:["paragraf","paregraph"]},
+ {w:"rupture",      chunks:["rup","ture"], trick:"rupt", tip:"rupt means break. rupt + ure. Keep the T!", sent:"The water pipe might rupture if it freezes.", fakes:["rupcher","ruptchure"]},
+ {w:"hierarchy",    chunks:["hi","er","arch","y"], trick:"arch", tip:"hi-er-arch-y. I comes before E, then the arch root (who's in charge).", sent:"The coach is at the top of the team hierarchy.", fakes:["heirarchy","hierarky"]},
+ {w:"biographer",   chunks:["bi","o","graph","er"], trick:"graph", tip:"bio = life, graph = write, er = person. Someone who writes a life story!", sent:"A biographer wrote a book about Michael Jordan.", fakes:["biografer","biograpfer"]},
+ {w:"abrupt",       chunks:["ab","rupt"], trick:"rupt", tip:"ab + rupt (break). It breaks off suddenly! Ends in P-T.", sent:"The game came to an abrupt stop when the lights went out.", fakes:["abrubt","abrup"]},
+ {w:"matriarch",    chunks:["ma","tri","arch"], trick:"arch", tip:"matri = mother, arch = ruler. The mom is the boss! Ends in C-H, not K.", sent:"Grandma is the matriarch of our big family.", fakes:["matriark","maytriarch"]},
+ {w:"uninterrupted",chunks:["un","in","ter","rupt","ed"], trick:"rrupt", tip:"un + inter + rupt + ed. inter ends with R and rupt starts with R, so it's a DOUBLE R!", sent:"I want one hour of uninterrupted basketball practice.", fakes:["uninterupted","uninteruppted"]},
+ {w:"anarchy",      chunks:["an","arch","y"], trick:"arch", tip:"an = no, arch = ruler. No ruler means total chaos! C-H, not K.", sent:"With no ref, the scrimmage turned into anarchy.", fakes:["anarky","anarchey"]},
+ {w:"autograph",    chunks:["au","to","graph"], trick:"graph", tip:"auto = self, graph = write. You write your own name! Starts with A-U.", sent:"I got the player's autograph on my basketball.", fakes:["autograf","ottograph"]},
+ {w:"eruption",     chunks:["e","rup","tion"], trick:"rupt", tip:"e + rupt + ion. The lava breaks OUT! Keep the T: rup-TION, one R.", sent:"The volcano eruption sent ash into the sky.", fakes:["erupsion","erruption"]},
+ {w:"calligraphy",  chunks:["cal","li","graph","y"], trick:"graph", tip:"cal-li-graph-y. Double L, then graph = write. It's fancy handwriting!", sent:"She wrote the invitations in beautiful calligraphy.", fakes:["caligraphy","calligrafy"]}
+];
+var app = document.getElementById("app");
+var state = {mode:null, queue:[], cur:null, built:"", used:[], score:0, streak:0, misses:{}, tries:0, round:0};
+var BEST_KEY = "rootrebound_best_v1";
+var STAR_KEY = "rootrebound_stars_v1";
+function best(){ try{return JSON.parse(localStorage.getItem(BEST_KEY))||{}}catch(e){return {}} }
+function stars(){ try{return JSON.parse(localStorage.getItem(STAR_KEY))||{}}catch(e){return {}} }
+function saveStar(w){ var s=stars(); s[w]=(s[w]||0)+1; try{localStorage.setItem(STAR_KEY,JSON.stringify(s))}catch(e){} }
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+function say(t,rate){ try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(t); u.rate=rate||0.85; speechSynthesis.speak(u);}catch(e){} }
+function sayWord(){ if(state.cur) say(state.cur.w+". "+state.cur.sent+" "+state.cur.w+".") }
+function hlTrick(o){ var i=o.w.indexOf(o.trick); if(i<0) return o.w; return o.w.slice(0,i)+'<span class="hl">'+o.trick+'</span>'+o.w.slice(i+o.trick.length); }
+
+var MODES = {
+ spot:  {name:"1. Spot the Swish", desc:"Pick the RIGHT spelling", cls:""},
+ chunk: {name:"2. Chunk Shot", desc:"Build it from word parts", cls:"blue"},
+ flash: {name:"3. Flash & Spell", desc:"Look, hide, spell it", cls:"green"},
+ boss:  {name:"4. Buzzer Beater 🔥", desc:"Hear it, spell it, no help", cls:"purple"}
+};
+
+function home(){
+  state.mode=null;
+  var b=best(), s=stars(), h='<h1>🏀 Root Rebound</h1><div class="sub">Unit 5 Lesson 10 · 12 words</div><div class="tip" style="text-align:left"><b>3 power roots:</b><br>🏛️ <b>arch</b> = chief / ruler<br>✍️ <b>graph</b> = write (PH says F!)<br>💥 <b>rupt</b> = break</div>';
+  for(var k in MODES){ var m=MODES[k]; h+='<button class="btn '+m.cls+'" onclick="startGame(\''+k+'\')">'+m.name+(b[k]?' · 🏆 '+b[k]:'')+'<small>'+m.desc+'</small></button>'; }
+  h+='<div class="sub" style="margin-top:16px">Play 1 → 4 in order. Each ⭐ = a word you nailed.</div><div class="grid">';
+  WORDS.forEach(function(o){ var n=s[o.w]||0; h+='<div>'+o.w+' '+(n?('⭐'.repeat(Math.min(n,5))):'')+'</div>'; });
+  h+='</div>';
+  app.innerHTML=h;
+}
+
+function startGame(mode){
+  state.mode=mode; state.score=0; state.streak=0; state.misses={}; state.round=0;
+  state.queue=shuffle(WORDS);
+  next();
+}
+
+function next(){
+  if(state.queue.length===0) return finish();
+  state.cur=state.queue.shift(); state.built=""; state.used=[]; state.tries=0; state.round++; state.chunkOrder=null; state.letterOrder=null;
+  render();
+  if(state.mode==="boss"||state.mode==="chunk") setTimeout(sayWord,250);
+  if(state.mode==="flash") flashShow();
+}
+
+function header(){
+  return '<div class="bar"><button onclick="home()">🏠</button><span>'+MODES[state.mode].name+'</span><span class="score">'+state.score+' pts</span></div>'+
+   '<div class="sub">Word '+state.round+' · 🔥 streak '+state.streak+'</div>';
+}
+
+function render(){
+  var o=state.cur, h=header();
+  h+='<div class="court"><div id="ball">🏀</div>';
+  if(state.mode==="spot"){
+    h+='<div class="prompt">Which one is spelled right?</div><button class="tile" onclick="sayWord()">🔊 Hear it</button></div><div class="choices">';
+    shuffle([o.w].concat(o.fakes)).forEach(function(c){ h+='<button class="btn" onclick="check(\''+c+'\')">'+c+'</button>'; });
+    h+='</div>';
+  } else if(state.mode==="chunk"){
+    h+='<div class="prompt">Build the word from its parts</div><div class="big">'+(state.built||'&nbsp;')+'</div>'+
+       '<button class="tile" onclick="sayWord()">🔊 Hear it</button></div><div class="tiles" id="tiles"></div>'+
+       '<div class="row"><button class="btn blue" onclick="undo()">⬅ Undo</button><button class="btn green" onclick="check(state.built)">Shoot! 🏀</button></div>';
+  } else if(state.mode==="flash"){
+    h+='<div id="flashArea"></div></div><div class="slots" id="slots"></div><div class="tiles" id="tiles"></div>'+
+       '<div class="row"><button class="btn blue" onclick="undo()">⬅ Undo</button><button class="btn" onclick="flashShow(true)">👀 Peek (-5)</button><button class="btn green" onclick="check(state.built)">Shoot!</button></div>';
+  } else if(state.mode==="boss"){
+    h+='<div class="prompt">Listen, then spell it. No help!</div><div class="slots" id="slots"></div>'+
+       '<button class="tile" onclick="sayWord()">🔊 Hear it again</button></div>'+keyboard();
+  }
+  h+='<div class="msg" id="msg"></div><div id="tipbox"></div>';
+  app.innerHTML=h;
+  if(state.mode==="chunk") drawChunks();
+  if(state.mode==="flash") { drawLetterTiles(); drawSlots(); }
+  if(state.mode==="boss") drawSlots();
+}
+
+function drawChunks(){
+  var t=document.getElementById("tiles"), o=state.cur, decoy=["ark","graf","rup","shun","ee","ul"];
+  var pool=o.chunks.slice(); var extra=shuffle(decoy.filter(function(d){return o.chunks.indexOf(d)<0}))[0]; pool.push(extra);
+  if(!state.chunkOrder) state.chunkOrder=shuffle(pool);
+  t.innerHTML="";
+  state.chunkOrder.forEach(function(c,i){
+    var b=document.createElement("button"); b.className="tile chunk"+(state.used.indexOf(i)>=0?" used":""); b.textContent=c;
+    b.onclick=function(){ state.used.push(i); state.built+=c; refreshChunk(); };
+    t.appendChild(b);
+  });
+}
+function refreshChunk(){ document.querySelector(".big").innerHTML=state.built||"&nbsp;"; drawChunks(); }
+
+function drawLetterTiles(){
+  var t=document.getElementById("tiles"), o=state.cur;
+  if(!state.letterOrder){ var extra=shuffle("kfeiur".split("")).slice(0,2); state.letterOrder=shuffle(o.w.split("").concat(extra)); }
+  t.innerHTML="";
+  state.letterOrder.forEach(function(c,i){
+    var b=document.createElement("button"); b.className="tile"+(state.used.indexOf(i)>=0?" used":""); b.textContent=c;
+    b.onclick=function(){ if(state.built.length>=o.w.length) return; state.used.push(i); state.built+=c; drawLetterTiles(); drawSlots(); };
+    t.appendChild(b);
+  });
+}
+function drawSlots(marks){
+  var s=document.getElementById("slots"); if(!s) return; var o=state.cur, h="";
+  for(var i=0;i<o.w.length;i++){ var ch=state.built[i]||""; var cl=marks?(marks[i]?" ok":" bad"):""; h+='<div class="slot'+cl+'">'+ch+'</div>'; }
+  s.innerHTML=h;
+}
+function undo(){
+  if(!state.built) return;
+  if(state.mode==="chunk"){ var i=state.used.pop(); state.built=state.built.slice(0,state.built.length-state.chunkOrder[i].length); refreshChunk(); }
+  else { state.used.pop(); state.built=state.built.slice(0,-1); if(state.mode==="flash") drawLetterTiles(); drawSlots(); }
+}
+function keyboard(){
+  var rows=["qwertyuiop","asdfghjkl","zxcvbnm"], h='<div class="kb">';
+  rows.forEach(function(r,ri){ h+='<div>'; if(ri===2) h+='<button class="wide" onclick="undo()">⬅</button>';
+    r.split("").forEach(function(c){ h+='<button onclick="typeL(\''+c+'\')">'+c+'</button>'; });
+    if(ri===2) h+='<button class="wide" onclick="check(state.built)">Shoot!</button>'; h+='</div>'; });
+  return h+'</div>';
+}
+function typeL(c){ if(state.built.length>=state.cur.w.length) return; state.built+=c; drawSlots(); }
+
+function flashShow(peek){
+  var a=document.getElementById("flashArea"); if(!a) return;
+  if(peek){ state.score=Math.max(0,state.score-5); document.querySelector(".score").textContent=state.score+" pts"; }
+  a.innerHTML='<div class="prompt">👀 Look hard! Say the parts out loud.</div><div class="flash">'+hlTrick(state.cur)+'</div><div class="tip">'+state.cur.tip+'</div>';
+  say(state.cur.w+". "+state.cur.chunks.join(", ")+". "+state.cur.w+".",0.8);
+  var me=state.cur;
+  setTimeout(function(){ if(state.cur===me && document.getElementById("flashArea")) document.getElementById("flashArea").innerHTML='<div class="prompt">🙈 It\'s hidden! Now spell it.</div><button class="tile" onclick="sayWord()">🔊 Hear it</button>'; }, 4000);
+}
+
+function check(ans){
+  var o=state.cur, msg=document.getElementById("msg"), tip=document.getElementById("tipbox");
+  if(!ans){ msg.textContent="Build the word first!"; return; }
+  if(ans===o.w){
+    var pts = state.tries===0 ? 10 : 5; state.streak++; if(state.streak>=3) pts+=5;
+    state.score+=pts; if(state.tries===0) saveStar(o.w);
+    msg.innerHTML=(state.streak>=3?"🔥 ON FIRE! ":"")+"SWISH! +"+pts;
+    if(state.mode==="boss"||state.mode==="flash") drawSlots(o.w.split("").map(function(){return true}));
+    var ball=document.getElementById("ball"); if(ball){ ball.className="shoot"; }
+    say(["Swish!","Nothing but net!","Buckets!","Slam dunk!"][Math.floor(Math.random()*4)],1);
+    document.querySelector(".score").textContent=state.score+" pts";
+    state.chunkOrder=null; state.letterOrder=null;
+    setTimeout(next,1300);
+  } else {
+    state.tries++; state.streak=0; state.misses[o.w]=(state.misses[o.w]||0)+1;
+    if(state.mode==="boss"||state.mode==="flash"){
+      var marks=[]; for(var i=0;i<o.w.length;i++) marks.push(ans[i]===o.w[i]);
+      drawSlots(marks);
+    }
+    msg.innerHTML="Clank! 🧱 Try again.";
+    tip.innerHTML='<div class="tip">💡 '+o.tip+(state.mode==="spot"?"":"<br>Green letters are right. Fix the red ones.")+'</div>';
+    say(o.tip,0.9);
+    if(state.tries>=2 && state.queue.indexOf(o)<0) state.queue.splice(Math.min(2,state.queue.length),0,o); // comes back later
+    if(state.mode==="spot"){ }
+    else if(state.mode==="chunk"){ state.built=""; state.used=[]; refreshChunk(); }
+    else { setTimeout(function(){ if(state.cur!==o) return; var keep=""; for(var i=0;i<o.w.length;i++){ if(state.built[i]===o.w[i]) keep+=o.w[i]; else break; } state.built=keep; state.used=state.mode==="flash"?usedFor(keep):[]; if(state.mode==="flash") drawLetterTiles(); drawSlots(); },1400); }
+    if(state.tries>=3){ msg.innerHTML="Here it is: <b>"+o.w+"</b>. It'll come back later. You got this!"; if(state.queue.indexOf(o)<0) state.queue.push(o); state.chunkOrder=null; state.letterOrder=null; setTimeout(next,3000); }
+  }
+}
+function usedFor(prefix){
+  var used=[], order=state.letterOrder;
+  prefix.split("").forEach(function(c){ for(var i=0;i<order.length;i++){ if(order[i]===c && used.indexOf(i)<0){ used.push(i); break; } } });
+  return used;
+}
+
+function finish(){
+  var b=best(), k=state.mode, newBest=false;
+  if(!b[k]||state.score>b[k]){ b[k]=state.score; newBest=true; try{localStorage.setItem(BEST_KEY,JSON.stringify(b))}catch(e){} }
+  var missed=Object.keys(state.misses);
+  var h='<h1>🏆 Game Over!</h1><div class="score" style="font-size:40px">'+state.score+' pts</div>'+(newBest?'<div class="sub">NEW HIGH SCORE! 🎉</div>':'<div class="sub">Best: '+b[k]+'</div>');
+  if(missed.length){ h+='<div class="tip">Practice these again:<br><b>'+missed.join(", ")+'</b></div>'; }
+  else h+='<div class="tip">PERFECT GAME! Every word, first try! 🔥</div>';
+  var order=["spot","chunk","flash","boss"], nx=order[order.indexOf(k)+1];
+  if(nx) h+='<button class="btn green" onclick="startGame(\''+nx+'\')">Next: '+MODES[nx].name+'</button>';
+  h+='<button class="btn" onclick="startGame(\''+k+'\')">Play again</button><button class="btn blue" onclick="home()">🏠 Home</button>';
+  app.innerHTML=h;
+  say(newBest?"New high score!":"Game over! Nice work!",1);
+}
+home();
+</script>
+</body>
+</html>
